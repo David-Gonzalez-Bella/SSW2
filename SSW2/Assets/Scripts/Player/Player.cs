@@ -5,35 +5,59 @@ using UnityEngine;
 
 public class Player : NetworkBehaviour
 {
+    //Componentes
     private SpriteRenderer spriteRenderer;
+
+    //Referencias
+    [SerializeField] private Color[] recolors;
+
+    //Variables sincronizadas
+    [HideInInspector] public NetworkVariable<byte> colorIndex = new NetworkVariable<byte>();
+
+    private void Start()
+    {
+        colorIndex.OnValueChanged += OnColorChanged;
+    }
 
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    private void Update()
-    {
-        if (!IsOwner) return;
-
-        if (!Input.GetKeyDown(KeyCode.Space)) return;
-
-        ChangeColorServerRpc(); //Decirle al servidor que cambie nuestro color a ojos de todos
-
-        spriteRenderer.color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)); //Cambiamos nuestro color al instante de forma local (mejor experiencia local)
-    }
-
     [ServerRpc]
-    private void ChangeColorServerRpc()
+    public void ChangeColorServerRpc(byte newColorIndex)
     {
-        ChangeColorClientRpc(); //Ejecutar el cambio de color en cada cliente
+        if (newColorIndex > 4) return;
+
+        colorIndex.Value = newColorIndex;
     }
 
-    [ClientRpc]
-    private void ChangeColorClientRpc()
+    private void OnEnable()
     {
-        if (IsOwner) return; //El color ya se ha cambiado en el cliente invocante
-
-        spriteRenderer.color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        //Suscribimos la variable sincronizada al evento de cambio de color
+        colorIndex.OnValueChanged += OnColorChanged;
     }
+
+    private void OnDisable()
+    {
+        //Dessuscribimos la variable sincronizada al evento de cambio de color
+        colorIndex.OnValueChanged -= OnColorChanged;
+    }
+
+    private void OnColorChanged(byte oldColorIndex, byte newColorIndex)
+    {
+        if (!IsClient) return;
+
+        spriteRenderer.color = recolors[newColorIndex];
+    }
+
+    //[ClientRpc]
+    //private void ChangeColorClientRpc()
+    //{
+    //    if (IsOwner) return; //El color ya se ha cambiado en el cliente invocante
+
+    //    spriteRenderer.color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+    //}
+
+
 }
