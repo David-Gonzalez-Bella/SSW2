@@ -6,10 +6,10 @@ using UnityEngine.UI;
 
 public class InterfaceManager : MonoBehaviour
 {
-    [SerializeField] private GameObject HostButton;
-    [SerializeField] private GameObject ClientButton;
-    [SerializeField] private GameObject LeaveButton;
-    public InputField PasswordField;
+    [SerializeField] private GameObject networkPanel;
+    [SerializeField] private GameObject colorPanel;
+    [SerializeField] private GameObject leaveButton;
+    public InputField passwordField;
 
     public static InterfaceManager Singleton { get; private set; }
 
@@ -18,20 +18,19 @@ public class InterfaceManager : MonoBehaviour
         if (Singleton == null) Singleton = this;
     }
 
-
     public void ShowMainMenuUI()
     {
-        HostButton.SetActive(true);
-        ClientButton.SetActive(true);
-        PasswordField.gameObject.SetActive(true);
-        LeaveButton.SetActive(false);
+        networkPanel.SetActive(true);
+        passwordField.gameObject.SetActive(true);
+        colorPanel.SetActive(false);
+        leaveButton.SetActive(false);
     }
 
     public void ShowConnectedUI()
     {
-        HostButton.SetActive(false);
-        ClientButton.SetActive(false);
-        PasswordField.gameObject.SetActive(false);
-        LeaveButton.SetActive(true);
+        networkPanel.SetActive(false);
+        passwordField.gameObject.SetActive(false);
+        colorPanel.SetActive(true);
+        leaveButton.SetActive(true);
     }
 }
