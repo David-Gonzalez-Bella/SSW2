@@ -5,8 +5,17 @@ using Unity.Netcode;
 using System;
 using System.Text;
 
-public class GameManager : MonoBehaviour
+public class ConnectionManager : MonoBehaviour
 {
+    public static ConnectionManager Singleton { get;  private set; }
+
+    private Dictionary<ulong, PlayerData> clientData;
+
+    private void Awake()
+    {
+        if (Singleton == null) Singleton = this;
+    }
+
     private void Start()
     {
         NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
@@ -23,6 +32,9 @@ public class GameManager : MonoBehaviour
 
     public void Host()
     {
+        clientData = new Dictionary<ulong, PlayerData>();
+        clientData[NetworkManager.Singleton.LocalClientId] = new PlayerData(InterfaceManager.Singleton.nicknameField.text);
+
         //Cuando un cliente se concecte a este host se le concede acceso validando su contraseña
         NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
         NetworkManager.Singleton.StartHost();
@@ -30,8 +42,16 @@ public class GameManager : MonoBehaviour
 
     public void Client()
     {
-        //Cuando un cliente se conecta, se setea la contraseña a comprar 
-        NetworkManager.Singleton.NetworkConfig.ConnectionData = Encoding.ASCII.GetBytes(InterfaceManager.Singleton.passwordField.text);
+        var payload = JsonUtility.ToJson(new ConnectionPayload()
+        {
+            nickname = InterfaceManager.Singleton.nicknameField.text,
+            password = InterfaceManager.Singleton.passwordField.text
+        });
+
+        byte[] connectionData = Encoding.ASCII.GetBytes(payload);
+
+        //Cuando un cliente se conecta, se setea la información que enviaremos al servidor
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = connectionData;
         NetworkManager.Singleton.StartClient();
     }
 
@@ -43,19 +63,6 @@ public class GameManager : MonoBehaviour
         }
         NetworkManager.Singleton.Shutdown(); //StopHost / StopClient
         InterfaceManager.Singleton.ShowMainMenuUI();
-    }
-
-
-    // Se ejecuta en el servidor cuando un cliente se conecta
-    private void ApprovalCheck(byte[] connectionData, ulong clientId, NetworkManager.ConnectionApprovedDelegate result)
-    {
-        string password = Encoding.ASCII.GetString(connectionData);
-
-        bool connectionApproved = password == InterfaceManager.Singleton.passwordField.text; //Comprobar si la contraseña que llega coincide con la que ve (introdujo) el host
-
-        Vector3 spawnPos = NetworkManager.Singleton.LocalClientId == clientId ? new Vector3(-0.5f, 0f, 0f) : new Vector3(0.5f, 0f, 0f);
-
-        result(true, null, connectionApproved, spawnPos, Quaternion.identity); //Resultado de la evaluación
     }
 
     // Se ejecuta en el cliente y en el servidor al conectarse un cliente
@@ -74,9 +81,11 @@ public class GameManager : MonoBehaviour
 
             if (localClient == null) return;
 
-            if (!localClient.PlayerObject.TryGetComponent<Player>(out Player localPlayer)) return;
+            if (!localClient.PlayerObject.TryGetComponent<PlayerLobby>(out PlayerLobby localPlayer)) return;
 
+            //Cuando se conecta un cliente, los demás llaman a las RPCs que correspondan para que este pueda verlos con el estado tal cual lo hayan cambiado
             localPlayer.ChangeColorServerRpc(localPlayer.colorIndex.Value);
+            localPlayer.ChangeNameServerRpc();
         }
     }
 
@@ -90,6 +99,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public PlayerData? GetPlayerData(ulong clientId)
+    {
+        if(clientData.TryGetValue(clientId, out PlayerData playerData))
+        {
+            return playerData;
+        }
+        return null;
+    }
+
     public void SetColorIndex(int colorIndex)
     {
         NetworkClient localClient = NetworkManager.Singleton.IsHost ?
@@ -100,9 +118,30 @@ public class GameManager : MonoBehaviour
         if (localClient == null) return;
 
         //Obtenemos la componente "Player" del jugador local
-        if (!localClient.PlayerObject.TryGetComponent<Player>(out Player localPlayer)) return;
+        if (!localClient.PlayerObject.TryGetComponent<PlayerLobby>(out PlayerLobby localPlayer)) return;
 
         //El jugador local llama una RPC para informar al servidor del cambio de color
         localPlayer.ChangeColorServerRpc((byte)colorIndex);
+    }
+
+    // Se ejecuta en el servidor cuando un cliente se conecta
+    private void ApprovalCheck(byte[] connectionData, ulong clientId, NetworkManager.ConnectionApprovedDelegate result)
+    {
+        //Comprobar que el nombre no llega vacio y que la contraseña que llega coincide con la que ve (introdujo) el host
+        string payload = Encoding.ASCII.GetString(connectionData);
+
+        var connectionPayload = JsonUtility.FromJson<ConnectionPayload>(payload);
+
+        bool connectionApproved = !string.IsNullOrEmpty(connectionPayload?.nickname.Trim()) &&
+                                  connectionPayload?.password == InterfaceManager.Singleton.passwordField.text;
+
+        Vector3 spawnPos = NetworkManager.Singleton.LocalClientId == clientId ? new Vector3(-0.5f, 0f, 0f) : new Vector3(0.5f, 0f, 0f);
+
+        if (connectionApproved)
+        {
+            clientData[clientId] = new PlayerData(connectionPayload?.nickname);
+        }
+
+        result(true, null, connectionApproved, spawnPos, Quaternion.identity); //Resultado de la evaluación
     }
 }
