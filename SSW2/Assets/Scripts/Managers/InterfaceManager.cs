@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.UI;
+using TMPro;
 
 public class InterfaceManager : MonoBehaviour
 {
@@ -10,8 +11,8 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private GameObject colorPanel;
     [SerializeField] private GameObject leaveButton;
 
-    public InputField nicknameField;
-    public InputField passwordField;
+    public TMP_InputField nicknameField;
+    public TMP_InputField passwordField;
 
     public static InterfaceManager Singleton { get; private set; }
 
