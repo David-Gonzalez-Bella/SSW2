@@ -7,7 +7,7 @@ using System.Text;
 
 public class ConnectionManager : MonoBehaviour
 {
-    public static ConnectionManager Singleton { get;  private set; }
+    public static ConnectionManager Singleton { get; private set; }
 
     private Dictionary<ulong, PlayerData> clientData;
 
@@ -73,20 +73,6 @@ public class ConnectionManager : MonoBehaviour
             //Cuando un cliente (client o host) se conecta, se actualiza el interfaz
             InterfaceManager.Singleton.ShowConnectedUI();
         }
-        else
-        {
-            NetworkClient localClient = NetworkManager.Singleton.IsHost ?
-                          NetworkManager.Singleton.ConnectedClients[NetworkManager.Singleton.LocalClientId] :
-                          NetworkManager.Singleton.LocalClient;
-
-            if (localClient == null) return;
-
-            if (!localClient.PlayerObject.TryGetComponent<PlayerLobby>(out PlayerLobby localPlayer)) return;
-
-            //Cuando se conecta un cliente, los demás llaman a las RPCs que correspondan para que este pueda verlos con el estado tal cual lo hayan cambiado
-            localPlayer.ChangeColorServerRpc(localPlayer.colorIndex.Value);
-            localPlayer.ChangeNameServerRpc();
-        }
     }
 
     // Se ejecuta en el cliente y en el servidor cuando este desconecta a un cliente (no cuando el cliente se desconecta de motu propio)
@@ -101,7 +87,7 @@ public class ConnectionManager : MonoBehaviour
 
     public PlayerData? GetPlayerData(ulong clientId)
     {
-        if(clientData.TryGetValue(clientId, out PlayerData playerData))
+        if (clientData.TryGetValue(clientId, out PlayerData playerData))
         {
             return playerData;
         }
