@@ -8,12 +8,13 @@ using System.Text;
 public class ConnectionManager : MonoBehaviour
 {
     public static ConnectionManager Singleton { get; private set; }
-
     private Dictionary<ulong, PlayerData> clientData;
-
+ 
     private void Awake()
     {
         if (Singleton == null) Singleton = this;
+
+        DontDestroyOnLoad(this);
     }
 
     private void Start()
@@ -33,7 +34,7 @@ public class ConnectionManager : MonoBehaviour
     public void Host()
     {
         clientData = new Dictionary<ulong, PlayerData>();
-        clientData[NetworkManager.Singleton.LocalClientId] = new PlayerData(InterfaceManager.Singleton.nicknameField.text);
+        clientData[NetworkManager.Singleton.LocalClientId] = new PlayerData(MainMenuUI.Singleton.nicknameField.text);
 
         //Cuando un cliente se concecte a este host se le concede acceso validando su contraseña
         NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
@@ -44,8 +45,8 @@ public class ConnectionManager : MonoBehaviour
     {
         var payload = JsonUtility.ToJson(new ConnectionPayload()
         {
-            nickname = InterfaceManager.Singleton.nicknameField.text,
-            password = InterfaceManager.Singleton.passwordField.text
+            nickname = MainMenuUI.Singleton.nicknameField.text,
+            password = MainMenuUI.Singleton.passwordField.text
         });
 
         byte[] connectionData = Encoding.ASCII.GetBytes(payload);
@@ -62,7 +63,7 @@ public class ConnectionManager : MonoBehaviour
             NetworkManager.Singleton.ConnectionApprovalCallback -= ApprovalCheck;
         }
         NetworkManager.Singleton.Shutdown(); //StopHost / StopClient
-        InterfaceManager.Singleton.ShowMainMenuUI();
+        NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     // Se ejecuta en el cliente y en el servidor al conectarse un cliente
@@ -70,8 +71,8 @@ public class ConnectionManager : MonoBehaviour
     {
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            //Cuando un cliente (client o host) se conecta, se actualiza el interfaz
-            InterfaceManager.Singleton.ShowConnectedUI();
+            //Cuando un cliente (client o host) se conecta, va al lobby
+            NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_Lobby, UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
 
@@ -81,7 +82,7 @@ public class ConnectionManager : MonoBehaviour
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
             //Cuando un cliente es desconectado por el host, se actualiza el interfaz
-            InterfaceManager.Singleton.ShowMainMenuUI();
+            NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
 
@@ -119,7 +120,7 @@ public class ConnectionManager : MonoBehaviour
         var connectionPayload = JsonUtility.FromJson<ConnectionPayload>(payload);
 
         bool connectionApproved = !string.IsNullOrEmpty(connectionPayload?.nickname.Trim()) &&
-                                  connectionPayload?.password == InterfaceManager.Singleton.passwordField.text;
+                                  connectionPayload?.password == MainMenuUI.Singleton.passwordField.text;
 
         Vector3 spawnPos = NetworkManager.Singleton.LocalClientId == clientId ? new Vector3(-0.5f, 0f, 0f) : new Vector3(0.5f, 0f, 0f);
 
