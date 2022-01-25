@@ -29,7 +29,7 @@ public class PlayerLobby : NetworkBehaviour
 
     private void Start()
     {
-        //[BUG]: En la version 1.0.0-pre.3, al unirse un nuevo cliente, no se llama en el lado del cliente a los hooks de aquellos jugadores que ya
+        //[BUG]: En la version 1.0.0-pre.4, al unirse un nuevo cliente, no se llama en el lado del cliente a los hooks de aquellos jugadores que ya
         //estaban de antes, solo a los del que acaba de unirse. De este modo, aunque los valores de las NetworkVariables estan bien en ambos lados,
         //en el del cliente no se ha producido el cambio correspondiente a su actualización (es decir, la llamada a los hooks), por lo que hay que hacer
         //las llamadas a los hooks de los demás clientes que ya estaban en la sala manualmente

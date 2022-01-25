@@ -113,12 +113,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5275670c328a584ca0cb3c41b9ce9f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  recolors:
-  - {r: 1, g: 1, b: 1, a: 1}
-  - {r: 1, g: 0.40000004, b: 0.41176474, a: 1}
-  - {r: 0.40000004, g: 1, b: 0.5411765, a: 1}
-  - {r: 0.40000004, g: 0.854902, b: 1, a: 1}
-  - {r: 1, g: 0.8941177, b: 0.40000004, a: 1}
+  nickname:
+    m_InternalValue:
+      utf8LengthInBytes: 0
+      bytes:
+        offset0000:
+          byte0000: 0
+          byte0001: 0
+          byte0002: 0
+          byte0003: 0
+          byte0004: 0
+          byte0005: 0
+          byte0006: 0
+          byte0007: 0
+          byte0008: 0
+          byte0009: 0
+          byte0010: 0
+          byte0011: 0
+          byte0012: 0
+          byte0013: 0
+          byte0014: 0
+          byte0015: 0
+        byte0016: 0
+        byte0017: 0
+        byte0018: 0
+        byte0019: 0
+        byte0020: 0
+        byte0021: 0
+        byte0022: 0
+        byte0023: 0
+        byte0024: 0
+        byte0025: 0
+        byte0026: 0
+        byte0027: 0
+        byte0028: 0
+        byte0029: 0
   colorIndex:
     m_InternalValue: 0
 --- !u!1 &4857875243333066423
@@ -155,7 +184,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.3}
+  m_AnchoredPosition: {x: 0, y: -0.29}
   m_SizeDelta: {x: 20, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &3686258667610928590
