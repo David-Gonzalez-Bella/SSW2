@@ -9,18 +9,23 @@ public class ConnectionManager : MonoBehaviour
 {
     public static ConnectionManager Singleton { get; private set; }
     private Dictionary<ulong, PlayerData> clientData;
- 
+
+    #region Unity Callbacks
     private void Awake()
     {
-        if (Singleton == null) Singleton = this;
-
+        if (Singleton != null && Singleton != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Singleton = this;
         DontDestroyOnLoad(this);
     }
 
     private void Start()
     {
         NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnected;
+        //NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnected;
     }
 
     private void OnDestroy()
@@ -28,43 +33,31 @@ public class ConnectionManager : MonoBehaviour
         if (NetworkManager.Singleton == null) { return; }
 
         NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
+        //NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
     }
+    #endregion
 
-    public void Host()
+    #region Listas internas 
+    public void InitializePlayerDataList()
     {
         clientData = new Dictionary<ulong, PlayerData>();
         clientData[NetworkManager.Singleton.LocalClientId] = new PlayerData(MainMenuUI.Singleton.nicknameField.text);
 
         //Cuando un cliente se concecte a este host se le concede acceso validando su contraseña
         NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
-        NetworkManager.Singleton.StartHost();
     }
 
-    public void Client()
+    public PlayerData? GetPlayerData(ulong clientId)
     {
-        var payload = JsonUtility.ToJson(new ConnectionPayload()
+        if (clientData.TryGetValue(clientId, out PlayerData playerData))
         {
-            nickname = MainMenuUI.Singleton.nicknameField.text,
-            password = MainMenuUI.Singleton.passwordField.text
-        });
-
-        byte[] connectionData = Encoding.ASCII.GetBytes(payload);
-
-        //Cuando un cliente se conecta, se setea la información que enviaremos al servidor
-        NetworkManager.Singleton.NetworkConfig.ConnectionData = connectionData;
-        NetworkManager.Singleton.StartClient();
-    }
-
-    public void Leave()
-    {
-        if (NetworkManager.Singleton.IsHost)
-        {
-            NetworkManager.Singleton.ConnectionApprovalCallback -= ApprovalCheck;
+            return playerData;
         }
-        NetworkManager.Singleton.Shutdown(); //StopHost / StopClient
-        NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
+        return null;
     }
+    #endregion
+
+    #region Handlers
 
     // Se ejecuta en el cliente y en el servidor al conectarse un cliente
     private void HandleClientConnected(ulong clientId)
@@ -77,25 +70,26 @@ public class ConnectionManager : MonoBehaviour
     }
 
     // Se ejecuta en el cliente y en el servidor cuando este desconecta a un cliente (no cuando el cliente se desconecta de motu propio)
-    private void HandleClientDisconnected(ulong clientId)
+    //private void HandleClientDisconnected(ulong clientId)
+    //{
+    //    if (clientId == NetworkManager.Singleton.LocalClientId)
+    //    {
+    //        NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
+    //    }
+    //}
+    #endregion
+
+    #region Network
+    public void Leave()
     {
-        if (clientId == NetworkManager.Singleton.LocalClientId)
+        if (NetworkManager.Singleton.IsHost)
         {
-            //Cuando un cliente es desconectado por el host, se actualiza el interfaz
-            NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
+            NetworkManager.Singleton.ConnectionApprovalCallback -= ApprovalCheck;
         }
+        NetworkManager.Singleton.SceneManager.LoadScene(TypedClasses.Scene_MainMenu, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
-    public PlayerData? GetPlayerData(ulong clientId)
-    {
-        if (clientData.TryGetValue(clientId, out PlayerData playerData))
-        {
-            return playerData;
-        }
-        return null;
-    }
-
-    public void SetColorIndex(int colorIndex)
+    public void SetCharacterIndex(int colorIndex)
     {
         NetworkClient localClient = NetworkManager.Singleton.IsHost ?
                       NetworkManager.Singleton.ConnectedClients[NetworkManager.Singleton.LocalClientId] :
@@ -108,7 +102,7 @@ public class ConnectionManager : MonoBehaviour
         if (!localClient.PlayerObject.TryGetComponent<PlayerLobby>(out PlayerLobby localPlayer)) return;
 
         //El jugador local llama una RPC para informar al servidor del cambio de color
-        localPlayer.ChangeColorServerRpc((byte)colorIndex);
+        localPlayer.ChangeCharacterServerRpc((byte)colorIndex);
     }
 
     // Se ejecuta en el servidor cuando un cliente se conecta
@@ -119,7 +113,8 @@ public class ConnectionManager : MonoBehaviour
 
         var connectionPayload = JsonUtility.FromJson<ConnectionPayload>(payload);
 
-        bool connectionApproved = !string.IsNullOrEmpty(connectionPayload?.nickname.Trim()) &&
+        bool connectionApproved = NetworkManager.Singleton.ConnectedClients.Count < 2 &&
+                                  !string.IsNullOrEmpty(connectionPayload?.nickname.Trim()) &&
                                   connectionPayload?.password == MainMenuUI.Singleton.passwordField.text;
 
         Vector3 spawnPos = NetworkManager.Singleton.LocalClientId == clientId ? new Vector3(-0.5f, 0f, 0f) : new Vector3(0.5f, 0f, 0f);
@@ -131,4 +126,5 @@ public class ConnectionManager : MonoBehaviour
 
         result(true, null, connectionApproved, spawnPos, Quaternion.identity); //Resultado de la evaluación
     }
+    #endregion
 }

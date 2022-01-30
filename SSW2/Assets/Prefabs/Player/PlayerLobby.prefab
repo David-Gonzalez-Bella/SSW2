@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 1174541071489925937}
   - component: {fileID: 5345822285795795155}
   - component: {fileID: 7873192913855738784}
+  - component: {fileID: 6937981343291522472}
+  - component: {fileID: 6320448654815006673}
   m_Layer: 0
   m_Name: PlayerLobby
   m_TagString: Untagged
@@ -148,8 +150,42 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
-  colorIndex:
+  characterIndex:
     m_InternalValue: 0
+--- !u!95 &6937981343291522472
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4713268817702601909}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: cfc0f3bb3d0d8b14ab50d5791d8b1cb4, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &6320448654815006673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4713268817702601909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Animator: {fileID: 6937981343291522472}
+  m_ParameterSendBits: 0
+  m_SendRate: 0.1
 --- !u!1 &4857875243333066423
 GameObject:
   m_ObjectHideFlags: 0

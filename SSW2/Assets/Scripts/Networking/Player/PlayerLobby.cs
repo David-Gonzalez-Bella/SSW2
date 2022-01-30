@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 public class PlayerLobby : NetworkBehaviour
@@ -12,12 +13,10 @@ public class PlayerLobby : NetworkBehaviour
     private SpriteRenderer spriteRenderer;
     private TMP_Text nicknameText;
 
-    //Variables
-    private Color[] recolors = { Color.white, Color.red, Color.green, Color.blue, Color.yellow };
-
     //Variables sincronizadas
     [HideInInspector] public NetworkVariable<FixedString32Bytes> nickname = new NetworkVariable<FixedString32Bytes>();
-    [HideInInspector] public NetworkVariable<byte> colorIndex = new NetworkVariable<byte>();
+    [HideInInspector] public NetworkVariable<byte> characterIndex = new NetworkVariable<byte>();
+    private NetworkAnimator animNet;
     #endregion
 
     #region Unity Callbacks
@@ -39,21 +38,21 @@ public class PlayerLobby : NetworkBehaviour
         if (IsOwner) return; //Si se trata del cliente cuyos hooks ya se han llamado no hacemos las llamadas manuales (ya se han hecho)
 
         OnNicknameChanged(nickname.Value, nickname.Value);
-        OnColorChanged(colorIndex.Value, colorIndex.Value);
+        OnCharacterChanged(characterIndex.Value, characterIndex.Value);
     }
 
     private void OnEnable()
     {
         //Asignamos los hooks al principio del todo
         nickname.OnValueChanged += OnNicknameChanged;
-        colorIndex.OnValueChanged += OnColorChanged;
+        characterIndex.OnValueChanged += OnCharacterChanged;
     }
 
     private void OnDisable()
     {
         //Desasignar los hooks
         nickname.OnValueChanged -= OnNicknameChanged;
-        colorIndex.OnValueChanged -= OnColorChanged;
+        characterIndex.OnValueChanged -= OnCharacterChanged;
     }
 
     public override void OnNetworkSpawn()
@@ -72,11 +71,11 @@ public class PlayerLobby : NetworkBehaviour
 
     #region RPCs
     [ServerRpc]
-    public void ChangeColorServerRpc(byte newColorIndex)
+    public void ChangeCharacterServerRpc(byte newCharacterIndex)
     {
-        if (newColorIndex > 4) return;
+        if (newCharacterIndex > 4) return;
 
-        colorIndex.Value = newColorIndex;
+        characterIndex.Value = newCharacterIndex;
     }
     #endregion
 
@@ -86,9 +85,9 @@ public class PlayerLobby : NetworkBehaviour
         nicknameText.text = newNickname.ToString();
     }
 
-    private void OnColorChanged(byte oldColorIndex, byte newColorIndex)
+    private void OnCharacterChanged(byte oldCharacterIndex, byte newCharacterIndex)
     {
-        spriteRenderer.color = recolors[newColorIndex];
+        spriteRenderer.color = LobbyUI.Singleton.recolors[newCharacterIndex];
     }
     #endregion
 }
